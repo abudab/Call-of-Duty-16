@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html" xmlns:c="http://java.sun.com/jsp/jstl/core">
+    <h:head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>Call of duty 16</title>
+        <script type="text/javascript" src="skrypt.js" ></script>
+    </h:head>
+    <h:body onload="letsRoll()">
+        <c:if test="#{sesja.myid}==-1">
+            Oh noes! Nie można dodać gracza!
+        </c:if>
+        <c:otherwise>
+<canvas id="tutaj" width="1000" height="800">
+<myid id="myid">
+    #{sesja.myid}
+</myid>
+<img id="msciwoj_mk1" src="Msciwoj_mk1.png" />
+<img id="t35" src="T35.png" />
+<terrain id="terrain_xres">
+66
+</terrain>
+<terrain id="terrain_y">130 260 400 450 430 410 370 270 190 130 100
+90 120 180 260 430 530 480 390 400 500
+530 400 290 200 130 40 50 160 280 270</terrain>
+<player id="player_pos">
+    #{sesja.pos}
+</player>
+<player id="player_life">
+    #{sesja.life}
+</player>
+<enemies id="enemies_list">
+    <c:forEach var="i" items="${sesja.enemies}">
+<enemy>
+#{i}
+</enemy>
+      </c:forEach>
+</enemies>
+</canvas>
+    </c:otherwise>
+    </h:body>
+</html>
+
