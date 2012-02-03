@@ -5,25 +5,37 @@
 package model;
 
 /**
- *
+ *Klasa enkapsuluje funkcje związane z fizyką gry (przede wszystkim trajektorie).
  * @author andrzej
  */
 public class Fizyka {
-    public static int [] teren;
-    public static int x_res;
+    public static int [] teren;//tu trzeba podpiąć wskaźnik do tablicy wysokości węzłów terenu
+    public static int x_res;//tu trzeba przypisać odległość x pomiędzy węzłami terenu
+    /**
+     * Zwraca ciąg punktów należących do trajektorii pocisku w postaci ciągu znaków
+     * nadającego się bezpośrednio do przekazania klientowi javascript. Ciąg: "x0 y0
+     * x1 y1 ... xn yn" gdzie x0 i y0 to pozycja czołgu który strzela, a xn yn to 
+     * punkt w którym eksploduje pocisk (okolica zderzenia trajektorii z terenem -
+     * TODO: polepszyć detekcję zderzeń żeby trafienia były dokładniejsze).
+     * Próbkowanie jest ze stałym czasem dt.
+     * @param ix0 pozycja x czołgu 
+     * @param iv0 "siła strzału" := prędkość początkowa pocisku
+     * @param ialfa kąt strzału w stopniach zgodnie z ruchem wskazówek zegara (czyli będą ujemne)
+     * @return string w sam raz do wysłania klientowi (no, bez nagłówka)
+     */
     public static String trajektoria(int ix0,int iv0,int ialfa){
         ialfa=-ialfa;
-        int iy0=igrek(ix0)+20;
-        String traj=ix0+" "+iy0+" ";
+        int iy0=igrek(ix0)+20;//pozycja początkowa y czołgu
+        String traj=ix0+" "+iy0+" ";//pierwszy punkt trajektorii
         int wezel=ix0/x_res;
         int i;
         int di=ialfa<90?1:-1;
-        
+        /*przepisuję na double dla dokładniejszych obliczeń*/
         Fizyka.x0=ix0;
         Fizyka.y0=iy0;
         Fizyka.v0=iv0;
         Fizyka.alfa=Math.PI*(ialfa/180.);
-        
+        /*Tu miała być mądrzejsza detekcja kolizji ale nie wyszła*/
         /*for(i=wezel;(alfa<90 && i<teren.length)||(alfa>=90 && i>-1);i+=di){
             if(teren[i]>parabola(i*x_res))
                 break;
@@ -57,25 +69,40 @@ public class Fizyka {
             x=igrek(x+dx)>parabola(x+dx)?x+dx:x;
             y=(int) parabola(x);
         }*/
-        double t=0.5;
+        double dt=0.5;
+        double t=dt;
         //boolean stanx=x>x0;
         //boolean stany=y>y0;
         while(true){
-            double xodt=x0+Math.cos(alfa)*v0*t;
+            double xodt=x0+Math.cos(alfa)*v0*t;//rzut ukośny duuuh..
             double yodt=y0+Math.sin(alfa)*v0*t-5.*t*t;
-            if(igrek((int)xodt)>yodt)
+            if(igrek((int)xodt)>yodt){//z krokiem dt czekamy aż pocisk wejdzie w ziemię
+                for(double ddt=-dt/5;ddt>-dt;ddt+=-dt/5){
+                    t+=ddt;
+                    xodt=x0+Math.cos(alfa)*v0*t;
+                    yodt=y0+Math.sin(alfa)*v0*t-5.*t*t;
+                    if(igrek((int)xodt)<yodt)//z mniejszym krokiem wyciągamy pocisk z ziemi
+                        break;
+                }
+                traj+=(int)xodt+" "+(int)yodt+" ";//w tym miejscu pocisk ekploduje
                 break;                      
-            traj+=(int)xodt+" "+(int)yodt+" ";
-            t+=0.5;
+            }
+            traj+=(int)xodt+" "+(int)yodt+" ";//kolejny punkt trajektorii pocisku
+            t+=dt;
             /*if((Math.abs(xodt-x)<4 && Math.abs(yodt-y)<4) ||
                     ((xodt<x)!=stanx && (yodt<y)!=stany))
                 break;*/
-            if(t>30)
+            if(t>30)//zabezpieczenie aby pocisk nie wyleciał na orbitę
                 break;
         }
         //traj+=(int)x+" "+(int)y;
         return traj;
     }
+    /**
+     * Metoda zwraca współrzędną y terenu na podstawie położenia x
+     * @param x współrzędna x
+     * @return współrzędna y terenu (wyskokość w miejscu x)
+     */
     public static int igrek(int x){
         int wn=x/x_res;
         int wn1=wn==teren.length-1?wn:wn+1;
@@ -88,6 +115,12 @@ public class Fizyka {
     static double v0;
     static double alfa;
     
+    /**
+     * Nieużywana w tej chwili metoda do obliczania pozycji y pocisku w zależności
+     * od pozycji x. 
+     * @param x
+     * @return 
+     */
     static double parabola(int x){
         return y0+Math.tan(alfa)*(x-x0)-5*Math.pow((x-x0)/(Math.cos(alfa)*v0),2);
     }
