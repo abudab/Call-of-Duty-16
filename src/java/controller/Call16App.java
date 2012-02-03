@@ -144,7 +144,7 @@ public class Call16App extends WebSocketApplication{
         int j=0;
         for(int i=0;i<gracze.length;++i){
             if(g.getId()!=gracze[i].getId()){
-                ngracze[i]=gracze[i];
+                ngracze[j]=gracze[i];
                 j++;
             }
         }
