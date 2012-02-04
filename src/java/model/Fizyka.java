@@ -9,8 +9,8 @@ package model;
  * @author andrzej
  */
 public class Fizyka {
-    public static int [] teren;//tu trzeba podpiąć wskaźnik do tablicy wysokości węzłów terenu
-    public static int x_res;//tu trzeba przypisać odległość x pomiędzy węzłami terenu
+    public int [] teren;//tu trzeba podpiąć wskaźnik do tablicy wysokości węzłów terenu
+    public int x_res;//tu trzeba przypisać odległość x pomiędzy węzłami terenu
     /**
      * Zwraca ciąg punktów należących do trajektorii pocisku w postaci ciągu znaków
      * nadającego się bezpośrednio do przekazania klientowi javascript. Ciąg: "x0 y0
@@ -23,7 +23,7 @@ public class Fizyka {
      * @param ialfa kąt strzału w stopniach zgodnie z ruchem wskazówek zegara (czyli będą ujemne)
      * @return string w sam raz do wysłania klientowi (no, bez nagłówka)
      */
-    public static String trajektoria(int ix0,int iv0,int ialfa){
+    public String trajektoria(int ix0,int iv0,int ialfa){
         ialfa=-ialfa;
         int iy0=igrek(ix0)+20;//pozycja początkowa y czołgu
         String traj=ix0+" "+iy0+" ";//pierwszy punkt trajektorii
@@ -31,10 +31,10 @@ public class Fizyka {
         int i;
         int di=ialfa<90?1:-1;
         /*przepisuję na double dla dokładniejszych obliczeń*/
-        Fizyka.x0=ix0;
-        Fizyka.y0=iy0;
-        Fizyka.v0=iv0;
-        Fizyka.alfa=Math.PI*(ialfa/180.);
+        x0=ix0;
+        y0=iy0;
+        v0=iv0;
+        alfa=Math.PI*(ialfa/180.);
         /*Tu miała być mądrzejsza detekcja kolizji ale nie wyszła*/
         /*for(i=wezel;(alfa<90 && i<teren.length)||(alfa>=90 && i>-1);i+=di){
             if(teren[i]>parabola(i*x_res))
@@ -103,17 +103,17 @@ public class Fizyka {
      * @param x współrzędna x
      * @return współrzędna y terenu (wyskokość w miejscu x)
      */
-    public static int igrek(int x){
+    public int igrek(int x){
         int wn=x/x_res;
         int wn1=wn==teren.length-1?wn:wn+1;
         return teren[wn]+
                 (int)((teren[wn1]-teren[wn])*((double)(x%x_res)/(double)x_res));
     }
     
-    static double x0;
-    static double y0;
-    static double v0;
-    static double alfa;
+    double x0;
+    double y0;
+    double v0;
+    double alfa;
     
     /**
      * Nieużywana w tej chwili metoda do obliczania pozycji y pocisku w zależności
@@ -121,7 +121,7 @@ public class Fizyka {
      * @param x
      * @return 
      */
-    static double parabola(int x){
+    double parabola(int x){
         return y0+Math.tan(alfa)*(x-x0)-5*Math.pow((x-x0)/(Math.cos(alfa)*v0),2);
     }
 }

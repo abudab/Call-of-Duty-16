@@ -13,19 +13,28 @@ import javax.servlet.http.HttpSessionBindingListener;
 import model.Gracz;
 
 /**
- *
+ *To jest klasa która odpowiada za sesję - połączenie gracza z serwerem.
+ * Podaje potrzebne rzeczy JSF'owi oraz dodaje gracza do gry.
  * @author andrzej
  */
 @ManagedBean
 @SessionScoped
 public class Sesja implements HttpSessionBindingListener {
    
-    private Gracz [] gracze=null;
     private Gracz g=null;
     private long myid=-1;
     @EJB
     private Rozgrywka rozgrywka;
-    private String nick;
+    private String nick=null;
+    private int graid=-1;
+
+    public int getGraid() {
+        return graid;
+    }
+
+    public void setGraid(int graid) {
+        this.graid = graid;
+    }
 
     public String getNick() {
         return nick;
@@ -35,11 +44,15 @@ public class Sesja implements HttpSessionBindingListener {
         this.nick = nick;
     }
     
-    
+    /**
+     * Gracz powienien zniknąć jak sesja wygaśnie i instancja zginie.
+     * To chyba nie jest dobre rozwiązanie...
+     * @throws Throwable 
+     */
     @Override
     protected void finalize() throws Throwable {
         if(g!=null)
-            rozgrywka.remove(g);
+            rozgrywka.remove(g,graid);
     }
 
     /**
@@ -49,25 +62,45 @@ public class Sesja implements HttpSessionBindingListener {
         
     }
     
-    public int [] getTerrain(){
-        return rozgrywka.getTerrain();
+    public String getTerrain(){
+        String r="";
+        int [] y=rozgrywka.getTerrain(graid);
+        if(y!=null){
+            int i;
+            for(i=0;i<y.length-1;++i){
+                r+=y[i]+" ";
+            }
+            r+=y[i]+"";
+        }
+        return r;
+    }
+    
+    public int getXres(){
+        return rozgrywka.getXresTerenu(graid);
     }
     
     public int getPos(){
-        return g.getPos();
+        
+        if(g!=null)
+            return g.getPos();
+        else
+            return 0;
     }
     
     public int getLife(){
-        return  g.getLife();
+        
+        if(g!=null)
+            return  g.getLife();
+        else
+            return 0;
     }
     
-    public void lockGraczy(){
-        gracze=rozgrywka.getGracze();
-    }
+
     
     public String [] getEnemies(){
+        Gracz [] gracze=rozgrywka.getGracze(graid);
         if(gracze==null)
-        lockGraczy();
+            return null;
         String [] enemies=new String[gracze.length];
         for(int i=0;i<gracze.length;++i){
             if(gracze[i].getId()!=myid)
@@ -78,19 +111,26 @@ public class Sesja implements HttpSessionBindingListener {
         return enemies;
     }
 
+    /**
+     * Pytając o id gracza próbujemy go wepchnąć do gry.
+     * Próba dołączenia do gry wystąpi, gdy znany jest nick i wybrana arena,
+     * a nie ma jeszcze gracza w grze.
+     * @return 
+     */
     public long getMyid() {
         if(g==null)
-            myid=rozgrywka.add(nick);
+            if(nick!=null && graid>-1)
+                myid=rozgrywka.add(nick,graid);
         if(myid>-1)
-            g=rozgrywka.getGracz(myid);
+            g=rozgrywka.getGracz(myid,graid);
         return myid;
     }
     
     public int getIlegraczy(){
-        lockGraczy();
-        if(gracze==null)
+        Gracz [] ge=rozgrywka.getGracze(graid);
+        if(ge==null)
             return 0;
-        return gracze.length;
+        return ge.length;
     }
 
     @Override
@@ -98,11 +138,26 @@ public class Sesja implements HttpSessionBindingListener {
         
     }
 
+    /**
+     * Handler ma wywalić gracza jeśli sesja wygaśnie.
+     * Czy działa? Nie wiem, chyba nie.
+     * @param event 
+     */
     @Override
     public void valueUnbound(HttpSessionBindingEvent event) {
-        if(g!=null)
-            rozgrywka.remove(g);
+        seppuku();
     }
     
+    /**
+     * Wywalenie gracza z gry 
+     */
+    public void seppuku(){
+        if(g!=null){
+            rozgrywka.remove(g, graid);
+            myid=-1;
+            g=null;
+            nick=null;
+        }
+    }
     
 }

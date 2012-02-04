@@ -13,6 +13,7 @@ public class Gracz {
     private int life;
     private long id;
     private String name;
+    private int gid;
 
     public long getId() {
         return id;
@@ -49,6 +50,14 @@ public class Gracz {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getGid() {
+        return gid;
+    }
+
+    public void setGid(int gid) {
+        this.gid = gid;
     }
 
     

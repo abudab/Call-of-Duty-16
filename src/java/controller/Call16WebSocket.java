@@ -18,4 +18,13 @@ public class Call16WebSocket extends DefaultWebSocket{
         super(protocolHandler, listeners);
     }
     
+    private int graid=-1;
+            
+    public int getGraid(){
+        return graid;
+    }
+    
+    public void setGraid(int graid){
+        this.graid=graid;
+    }
 }
