@@ -21,6 +21,9 @@ var trajx;
 var trajy;
 var trajktora;
 
+var dlugoscplanszy;
+var graid;
+
 function letsRoll(){
 	pl=document.getElementById('tutaj');
 	xres=parseInt(document.getElementById('terrain_xres').innerHTML);
@@ -42,8 +45,10 @@ function letsRoll(){
 				pos: parseInt(enemyData[1]),
 				life: parseInt(enemyData[2])});
 	}
+        graid=parseInt(document.getElementById('graid').innerHTML);
         playerEye=player_pos;
         t35=document.getElementById('t35');
+        dlugoscplanszy =(terrain_y.length-1)*xres;
 	setInterval(animuj,100);
 	//setInterval(jakKlikasz,200);
 	document.onkeydown=wcisniecieHandler;
@@ -52,7 +57,7 @@ function letsRoll(){
 	document.onmouseup=puszczenieMHandler;
         //ws = new WebSocket("ws://192.168.242.155:8080/Call16/WSServlet");
         ws = new WebSocket("ws://127.0.0.1:8080/Call16/WSServlet");
-        ws.onopen = function(evt) {alert("Connection open ...");};
+        ws.onopen = przywitajSie;
         ws.onclose = function(evt) {alert("Connection closed ...");};
         ws.onmessage = recv;
 }
@@ -61,7 +66,8 @@ function rysujTeren(k){
 	k.strokeStyle="rgb(0,0,0)";
 	k.beginPath();
 	/*start=player_pos-500>0?player_pos+500>3000?2000:player_pos-500:0;*/
-        start=playerEye-500>0?playerEye+500>2000?1000:playerEye-500:0;
+        start=playerEye-500>0?playerEye+500>dlugoscplanszy?dlugoscplanszy-1000:playerEye-500:0;
+        start=start<0?0:start;
 	end=start+1000;
 	/*player_pos+500>xres*terrain_y.length?xres*terrain_y.length:player_pos+500*/;
 	var i;
@@ -120,6 +126,7 @@ function rysujGracza(k){
 }
 
 function rysujLifeBar(k){
+        if(player_pos>0){
 	if(player_life>66)
 		k.fillStyle="rgb(0,255,0)";
 	else if(player_life>33)
@@ -129,6 +136,11 @@ function rysujLifeBar(k){
 	k.fillRect(5,5,player_life,10);
 	k.fillStyle="rgb(0,0,0)";
 	k.fillText("Gracz",5,15);
+        }
+        else{
+            k.fillStyle="rgb(0,0,0)";
+            k.fillText("Tylko obserwujesz",5,15);
+        }
 	var i;
 	for(i=0;i<enemies.length;++i){
 		if(enemies[i].life>66)
@@ -165,8 +177,20 @@ var czyn=0;
 
 function rysujTrajektorie(k){
     if(leci){
-            if(trajktora>trajx.length)
+            if(trajktora>trajx.length+2)
                 leci=false;
+            if(trajktora>trajx.length){
+                k.strokeStyle="rgb(255,0,0)";
+                k.beginPath();
+                k.arc(trajx[trajktora-2],
+                    trajy[trajktora-2],
+                    30,
+                    0,
+                    2*Math.PI,
+                    true);
+                k.stroke();
+                trajktora+=2;
+            }
             else{
                 if(trajx[trajktora]-2>start && trajx[trajktora]+2<end && 
                     trajy[trajktora]>2 && trajy[trajktora]<1998)
@@ -181,7 +205,8 @@ function animuj(){
 	k.fillStyle="rgb(150,200,250)";
 	k.fillRect(0,0,1000,800);
 	rysujTeren(k);
-	rysujGracza(k);
+        if(player_pos>0)
+            rysujGracza(k);
 	rysujWrogow(k);
 	rysujLifeBar(k);
         rysujTrajektorie(k);
@@ -197,7 +222,7 @@ function animuj(){
 function ruszGracza(){
 	/*player_pos=player_pos+czyn>1950?1950:player_pos+czyn<50?50:
 		player_pos+czyn;*/
-    playerEye=playerEye+czyn>1500?1500:playerEye+czyn<500?500:
+    playerEye=playerEye+czyn>dlugoscplanszy-500?dlugoscplanszy-500:playerEye+czyn<500?500:
 		playerEye+czyn;
 }
 
@@ -240,7 +265,7 @@ function puszczenieMHandler(e){
 }
 
 function recv(e){
-   // alert(e.data);
+    //alert(e.data);
     var data=e.data.split(" ");
     if(data[0]=="Komunikat")
         alert(e.data);
@@ -266,4 +291,9 @@ function recv(e){
             trajy.push(parseInt(data[i+1]));
         }
     }
+}
+
+function przywitajSie(evt){
+    alert("Connection open...");
+    ws.send("Uklony "+graid);
 }

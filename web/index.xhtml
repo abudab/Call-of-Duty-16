@@ -3,27 +3,54 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:f="http://java.sun.com/jsf/core">
     <h:head>
+        <script type="text/javascript" src="powitalny.js" />
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>Call of duty 16</title>
     </h:head>
-    <h:body>
+    <h:body onload="siu()">
         <h1>Mordowanie na ekranie</h1>
-        Aktualna liczba graczy: #{sesja.ilegraczy}<br/>
-        <c:if test="${sesja.ilegraczy>0}">
-            <table>
-                <c:forEach var="i" items="${sesja.enemies}">
-                    <tr><td>#{i}</td></tr>
-                </c:forEach>
-            </table>
+        <c:if test="${sesja.myid>0}">
+            Ty już grasz jako #{sesja.nick}.<br/>
+            Kliknij aby wrócić do gry.
+            <h:form>
+                 <h:commandButton action="cod17" value="klik"/>
+            </h:form>
         </c:if>
-        <h:form>
-           Podaj pseudonim operacyjny: 
-           <h:inputText id="nick" value="#{sesja.nick}">
-               <f:validateRegex pattern="[_a-zA-Z0-9-]+"/>
-               <f:validateLength minimum="2" maximum="20" />
-           </h:inputText>
-           <h:commandButton action="cod17" value="dołącz"/>
-        </h:form>
+        <c:if test="${sesja.myid==-1}">
+        <h2 onclick="arenyKlik()">Dostępne areny</h2>
+        <c:set var="ktora" value="0"/>
+        <div class="areny" id="areny" style="display:block" >
+            <c:forEach var="i" items="${powitalna.nazwy}">
+                <div class="arena">
+                    <h3>#{i}</h3>
+                    <canvas height="240" width="320">
+                        #{powitalna.getTeren(ktora)}
+                    </canvas>
+                    <br />
+                    Aktualna liczba graczy: #{powitalna.lgraczy(ktora)}<br/>
+                    Maksymalna liczba graczy: #{powitalna.mgraczy(ktora)}<br/>
+                    <c:if test="${powitalna.lgraczy(ktora)>0}">
+                        <table><tr><th>Nick % Life</th></tr>
+                            <c:forEach var="j" items="${powitalna.graczy(ktora)}">
+                                <tr><td>#{j}</td></tr>
+                            </c:forEach>
+                        </table>
+                    </c:if>
+                    <h:form id="forma#{ktora}">
+                Podaj pseudonim operacyjny: 
+                <h:inputText id="nick" value="#{sesja.nick}">
+                    <f:validateRegex pattern="[_a-zA-Z0-9-]+"/>
+                    <f:validateLength minimum="2" maximum="20" />
+                </h:inputText>
+                
+                <h:inputHidden id="dokad#{ktora}" value="#{sesja.graid}"/>
+                <h:commandButton action="cod17" value="dołącz"/>
+                </h:form>
+                </div>
+                <c:set var="ktora" value="${ktora+1}"/>
+            </c:forEach>
+        </div>
+        </c:if>
     </h:body>
 </html>
 
