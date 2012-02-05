@@ -4,6 +4,9 @@
  */
 package model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *Klasa reprezentuje grę na jednej arenie.
  * Zawiera listę graczy, identyfikator i informacje o arenie.
@@ -162,5 +165,32 @@ public class Gra {
     
     public int igrek(int x){
         return fizyka.igrek(x);
+    }
+    
+    public boolean czyTrafilo(int x,int y){
+        List ubici=null;
+        if(gracze==null)
+            return false;
+        boolean trafilo=false;
+        for(int i=0;i<gracze.length;++i){
+            int gx=gracze[i].getPos();
+            int gy=igrek(gx);
+            double r=Math.sqrt((x-gx)*(x-gx)+(y-gy)*(y-gy));
+            if(r<36.){
+                trafilo=true;
+                gracze[i].setLife( gracze[i].getLife()-
+                        (int)(40*Math.exp(-r*r/600.)) );
+                if(gracze[i].getLife()<1){
+                    gracze[i].setLife(0);
+                    if(ubici==null)
+                        ubici=new ArrayList();
+                    ubici.add(gracze[i].getId());
+                }
+            }
+        }
+        if(ubici!=null)
+            for(Object id: ubici)
+                remove((Long)id);
+        return trafilo;
     }
 }

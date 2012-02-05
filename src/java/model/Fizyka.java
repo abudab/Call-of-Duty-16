@@ -24,6 +24,7 @@ public class Fizyka {
      * @return string w sam raz do wysłania klientowi (no, bez nagłówka)
      */
     public String trajektoria(int ix0,int iv0,int ialfa){
+       // return "0 0 100 100 200 200 300 300 400 200 500 300 600 200";
         ialfa=-ialfa;
         int iy0=igrek(ix0)+20;//pozycja początkowa y czołgu
         String traj=ix0+" "+iy0+" ";//pierwszy punkt trajektorii
@@ -77,8 +78,8 @@ public class Fizyka {
             double xodt=x0+Math.cos(alfa)*v0*t;//rzut ukośny duuuh..
             double yodt=y0+Math.sin(alfa)*v0*t-5.*t*t;
             if(igrek((int)xodt)>yodt){//z krokiem dt czekamy aż pocisk wejdzie w ziemię
-                for(double ddt=-dt/5;ddt>-dt;ddt+=-dt/5){
-                    t+=ddt;
+                double niedalej=t-dt;
+                for(t=t-.1*dt;t>niedalej;t-=.1*dt){
                     xodt=x0+Math.cos(alfa)*v0*t;
                     yodt=y0+Math.sin(alfa)*v0*t-5.*t*t;
                     if(igrek((int)xodt)<yodt)//z mniejszym krokiem wyciągamy pocisk z ziemi
@@ -105,6 +106,7 @@ public class Fizyka {
      */
     public int igrek(int x){
         int wn=x/x_res;
+        wn=wn<0?0:wn>teren.length-1?teren.length-1:wn;
         int wn1=wn==teren.length-1?wn:wn+1;
         return teren[wn]+
                 (int)((teren[wn1]-teren[wn])*((double)(x%x_res)/(double)x_res));
