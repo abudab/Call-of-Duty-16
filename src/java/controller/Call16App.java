@@ -125,33 +125,10 @@ public class Call16App extends WebSocketApplication{
             if(((Call16WebSocket)ws).getGraid()==graid)
                 ws.send(msg);
         }
-        Gracz [] gracze=gry[graid].getGracze();
-        if(gracze!=null){//ajjj detekcję trafień trzeba przenieść do klasy Gra
-            String [] ss=msg.split(" ");
-            int x=Integer.parseInt(ss[ss.length-2]);
-            int y=Integer.parseInt(ss[ss.length-1]);
-            boolean trafionecos=false;
-            for(int i=0;i<gracze.length;++i){
-                int gx=gracze[i].getPos();
-                int gy=gry[graid].igrek(gx);
-                if((x-gx)*(x-gx)+(y-gy)*(y-gy)<3600){
-                    gracze[i].setLife(gracze[i].getLife()-10>2?
-                            gracze[i].getLife()-10:0);
-                    trafionecos=true;
-                }
-                if((x-gx)*(x-gx)+(y-gy)*(y-gy)<2400)
-                    gracze[i].setLife(gracze[i].getLife()-20>2?
-                            gracze[i].getLife()-20:0);
-                if((x-gx)*(x-gx)+(y-gy)*(y-gy)<100)
-                    gracze[i].setLife(gracze[i].getLife()-20>2?
-                            gracze[i].getLife()-20:0);
-                
-            }
-            if(trafionecos){
-                sendUpdate(graid);
-            }
-            
-        }
+        String [] ss=msg.split(" ");
+        if(gry[graid].czyTrafilo(Integer.parseInt(ss[ss.length-2]), Integer.parseInt(ss[ss.length-1])))
+            sendUpdate(graid);
+        
     }
     
     
