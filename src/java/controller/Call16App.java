@@ -54,14 +54,11 @@ public class Call16App extends WebSocketApplication{
             try{
                 int graid=Integer.parseInt(text.split(" ")[1]);//przypisujemy mu numer gry
                 ((Call16WebSocket)socket).setGraid(graid);
-                long id=Long.parseLong(text.split(" ")[2]);
-                ((Call16WebSocket)socket).setId(id);
-                ((Call16WebSocket)socket).setValid(true);
             }
             catch(Exception e){}
             return;
         }
-        if( !((Call16WebSocket)socket).isValid() || ((Call16WebSocket)socket).getGraid()>=gry.length)
+        if(((Call16WebSocket)socket).getGraid()<0 || ((Call16WebSocket)socket).getGraid()>=gry.length)
             return; //odrzucanie wiadomości od klientów którzy się nie ukłonili i nie mają przypisanych graid
         if(text.startsWith("chat")){//broadcast - nie używane
             broadcastShout(text.split(" ")[1],text.substring(text.indexOf(" ", 5)));

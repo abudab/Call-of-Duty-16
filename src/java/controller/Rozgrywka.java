@@ -84,7 +84,7 @@ public class Rozgrywka {
     }
     
     public void remove(Gracz g,int graid){
-        gry[graid].remove(g.getId());
+        gry[graid].remove(g.getGid());
         app.sendUpdate(graid);
     }
     

@@ -19,24 +19,6 @@ public class Call16WebSocket extends DefaultWebSocket{
     }
     
     private int graid=-1;
-    private long id=-1;
-    private boolean valid=false;
-
-    public boolean isValid() {
-        return valid;
-    }
-
-    public void setValid(boolean valid) {
-        this.valid = valid;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
             
     public int getGraid(){
         return graid;
