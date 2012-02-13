@@ -56,7 +56,7 @@ function letsRoll(){
 	document.onmousedown=wcisniecieMHandler;
 	document.onmouseup=puszczenieMHandler;
         //ws = new WebSocket("ws://192.168.242.155:8080/Call16/WSServlet");
-        ws = new WebSocket("ws://127.0.0.1:8080/Call16/WSServlet");
+        ws = new WebSocket("ws://127.0.0.1:8080/Call16");
         ws.onopen = przywitajSie;
         ws.onclose = function(evt) {alert("Connection closed ...");};
         ws.onmessage = recv;
@@ -179,23 +179,23 @@ function rysujTrajektorie(k){
     if(leci){
             if(trajktora>trajx.length+2)
                 leci=false;
-            if(trajktora>trajx.length){
+            if(trajktora>trajx.length-1){
                 k.strokeStyle="rgb(255,0,0)";
                 k.beginPath();
-                k.arc(trajx[trajktora-2],
-                    trajy[trajktora-2],
+                k.arc(trajx[trajx.length-1]-start,
+                    800-trajy[trajy.length-1],
                     30,
                     0,
                     2*Math.PI,
                     true);
                 k.stroke();
-                trajktora+=2;
+                trajktora+=1;
             }
             else{
                 if(trajx[trajktora]-2>start && trajx[trajktora]+2<end && 
                     trajy[trajktora]>2 && trajy[trajktora]<1998)
                     k.fillRect(trajx[trajktora]-2-start,800-trajy[trajktora]-2,4,4);
-                trajktora+=2;
+                trajktora+=1;
             }
         }
 }
@@ -247,6 +247,8 @@ function puszczenieHandler(e){
 }
 
 function strzal(){
+    if(leci)
+        return;
     var pbv=powerBarValue*2;
     var wysylka=player_pos+" "+alfa+" "+pbv;
     //alert("wysylam: "+wysylka);
@@ -287,8 +289,10 @@ function recv(e){
         trajktora=0;
         var i;
         for(i=1;i<data.length;i+=2){
-            trajx.push(parseInt(data[i]));
-            trajy.push(parseInt(data[i+1]));
+            if(parseInt(data[i])>-100 && parseInt(data[i])<10000 )
+                trajx.push(parseInt(data[i]));
+            if(parseInt(data[i+1])>-100 && parseInt(data[i+1])<10000 )
+                trajy.push(parseInt(data[i+1]));
         }
     }
 }
