@@ -119,7 +119,7 @@ public class Sesja implements HttpSessionBindingListener {
      */
     public long getMyid() {
         if(g==null)
-            if(nick!=null && graid>-1)
+            if(myid==-1 && nick!=null && graid>-1)
                 myid=rozgrywka.add(nick,graid);
         if(myid>-1)
             g=rozgrywka.getGracz(myid,graid);

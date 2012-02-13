@@ -23,6 +23,8 @@ var trajktora;
 
 var dlugoscplanszy;
 var graid;
+var padl=false;
+var epitafium;
 
 function letsRoll(){
 	pl=document.getElementById('tutaj');
@@ -55,8 +57,9 @@ function letsRoll(){
 	document.onkeyup=puszczenieHandler;
 	document.onmousedown=wcisniecieMHandler;
 	document.onmouseup=puszczenieMHandler;
-        //ws = new WebSocket("ws://192.168.242.155:8080/Call16/WSServlet");
-        ws = new WebSocket("ws://127.0.0.1:8080/Call16/WSServlet");
+        ws = new WebSocket("ws://192.168.242.155:8080/Call16");
+        //ws = new WebSocket("ws://127.0.0.1:8080/Call16/WSServlet");
+        //ws = new WebSocket("ws://andreu.dsv.agh.edu.pl:8080/Call16/WSServlet");
         ws.onopen = przywitajSie;
         ws.onclose = function(evt) {alert("Connection closed ...");};
         ws.onmessage = recv;
@@ -139,7 +142,8 @@ function rysujLifeBar(k){
         }
         else{
             k.fillStyle="rgb(0,0,0)";
-            k.fillText("Tylko obserwujesz",5,15);
+            k.fillText("Nie ma Cię",5,15);
+            k.drawImage(epitafium,250,2);
         }
 	var i;
 	for(i=0;i<enemies.length;++i){
@@ -179,23 +183,27 @@ function rysujTrajektorie(k){
     if(leci){
             if(trajktora>trajx.length+2)
                 leci=false;
-            if(trajktora>trajx.length){
+            else if(trajktora>trajx.length-1){
                 k.strokeStyle="rgb(255,0,0)";
                 k.beginPath();
-                k.arc(trajx[trajktora-2],
-                    trajy[trajktora-2],
+                k.arc(trajx[trajx.length-1]-start,
+                    800-trajy[trajy.length-1],
                     30,
                     0,
                     2*Math.PI,
                     true);
+                k.moveTo(trajx[trajx.length-1]-10-start,800-trajy[trajy.length-1]);
+                k.lineTo(trajx[trajx.length-1]+10-start,800-trajy[trajy.length-1]);
+                k.moveTo(trajx[trajx.length-1]-start,800-trajy[trajy.length-1]-10);
+                k.lineTo(trajx[trajx.length-1]-start,800-trajy[trajy.length-1]+10);
                 k.stroke();
-                trajktora+=2;
+                trajktora+=1;
             }
             else{
                 if(trajx[trajktora]-2>start && trajx[trajktora]+2<end && 
                     trajy[trajktora]>2 && trajy[trajktora]<1998)
                     k.fillRect(trajx[trajktora]-2-start,800-trajy[trajktora]-2,4,4);
-                trajktora+=2;
+                trajktora+=1;
             }
         }
 }
@@ -247,6 +255,8 @@ function puszczenieHandler(e){
 }
 
 function strzal(){
+    if(leci)
+        return;
     var pbv=powerBarValue*2;
     var wysylka=player_pos+" "+alfa+" "+pbv;
     //alert("wysylam: "+wysylka);
@@ -264,6 +274,13 @@ function puszczenieMHandler(e){
         strzal();
 }
 
+function fieryDeath(){
+    player_pos=0;
+    epitafium=document.getElementById("epitafium");
+    padl=true;
+    ws.close();
+}
+
 function recv(e){
     //alert(e.data);
     var data=e.data.split(" ");
@@ -272,12 +289,20 @@ function recv(e){
     else if(data[0]=="Gracze"){
         enemies=new Array();
 	var i;
+        var bylem=false;
 	for(i=1;i<data.length;i+=4) {
                 if(parseInt(data[i+3])!=myId)
                     enemies.push({imie: data[i],
 				pos: parseInt(data[i+1]),
 				life: parseInt(data[i+2])});
+                else{
+                    bylem=true;
+                    player_pos=parseInt(data[i+1]);
+                    player_life=parseInt(data[i+2]);
+                }
 	}
+        if(!bylem)
+            fieryDeath();
     }
     else if(data[0]=="Trajektoria"){
         
@@ -287,13 +312,19 @@ function recv(e){
         trajktora=0;
         var i;
         for(i=1;i<data.length;i+=2){
-            trajx.push(parseInt(data[i]));
-            trajy.push(parseInt(data[i+1]));
+            if(parseInt(data[i])>0 && parseInt(data[i])<10000)
+                trajx.push(parseInt(data[i]));
+            if(parseInt(data[i+1])>0 && parseInt(data[i+1])<10000)
+                trajy.push(parseInt(data[i+1]));
         }
     }
 }
 
 function przywitajSie(evt){
     alert("Connection open...");
-    ws.send("Uklony "+graid);
+    ws.send("Uklony "+graid+" "+myId);
+}
+
+function paPa(){
+    ws.close();
 }

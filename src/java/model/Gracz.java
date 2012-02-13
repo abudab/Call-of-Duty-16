@@ -4,11 +4,13 @@
  */
 package model;
 
+import java.io.Serializable;
+
 /**
  *
  * @author andrzej
  */
-public class Gracz {
+public class Gracz implements Serializable{
     private int pos;
     private int life;
     private long id;

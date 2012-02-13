@@ -105,7 +105,7 @@ public class Fizyka {
      * @return współrzędna y terenu (wyskokość w miejscu x)
      */
     public int igrek(int x){
-        int wn=x/x_res;
+        int wn=x/x_res-1;
         wn=wn<0?0:wn>teren.length-1?teren.length-1:wn;
         int wn1=wn==teren.length-1?wn:wn+1;
         return teren[wn]+
