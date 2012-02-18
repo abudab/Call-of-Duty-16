@@ -24,6 +24,8 @@ var trajktora;
 var dlugoscplanszy;
 var graid;
 
+var WEBSOCKET="ws://127.0.0.1:8080/Call16";
+
 function letsRoll(){
 	pl=document.getElementById('tutaj');
 	xres=parseInt(document.getElementById('terrain_xres').innerHTML);
@@ -56,7 +58,7 @@ function letsRoll(){
 	document.onmousedown=wcisniecieMHandler;
 	document.onmouseup=puszczenieMHandler;
         //ws = new WebSocket("ws://192.168.242.155:8080/Call16/WSServlet");
-        ws = new WebSocket("ws://127.0.0.1:8080/Call16");
+        ws = new WebSocket(WEBSOCKET);
         ws.onopen = przywitajSie;
         ws.onclose = function(evt) {alert("Connection closed ...");};
         ws.onmessage = recv;
@@ -171,6 +173,40 @@ function rysujWrogow(k){
 				800-y-2*t35.height);
 		}
 	}
+        for(j in trupy){
+            if(trupy[j].t>0){
+                y=terrain_y[Math.floor(trupy[j].gdzie/xres)];
+		dy=(terrain_y[Math.floor(trupy[j].gdzie/xres)==terrain_y.length-1?terrain_y.length-1:
+				Math.floor(trupy[j].gdzie/xres)+1]-terrain_y[Math.floor(trupy[j].gdzie/xres)])*
+				((trupy[j].gdzie%xres)/xres);
+		y+=dy;
+                switch(trupy[j].t){
+                    case 3: 
+                        k.fillStyle="rgb(255,0,0)"
+                        k.beginPath();
+                        k.arc(trupy[j].gdzie-start,800-y-t35.height/2,20,0,Math.PI*2,true);
+                        k.fill();
+                        break;
+                    case 2: 
+                        k.fillStyle="rgb(255,255,0)"
+                        k.beginPath();
+                        k.arc(trupy[j].gdzie-start,800-y-t35.height/2,30,0,Math.PI*2,true);
+                        k.fill();
+                        k.fillStyle="rgb(255,0,0)"
+                        k.beginPath();
+                        k.arc(trupy[j].gdzie-start,800-y-t35.height/2,10,0,Math.PI*2,true);
+                        k.fill();
+                        break;
+                    case 1:
+                        k.fillStyle="rgb(255,255,0)"
+                        k.beginPath();
+                        k.arc(trupy[j].gdzie-start,800-y-t35.height/2,40,0,Math.PI*2,true);
+                        k.fill();
+                        break;
+                }
+                trupy[j].t-=1;
+            }
+        }
 }
 
 var czyn=0;
@@ -210,6 +246,7 @@ function animuj(){
 	rysujWrogow(k);
 	rysujLifeBar(k);
         rysujTrajektorie(k);
+        graczeUpdate();
 	ruszGracza();
         
 	/*if(player_pos==3000)
@@ -247,7 +284,7 @@ function puszczenieHandler(e){
 }
 
 function strzal(){
-    if(leci)
+    if(leci || player_pos==0)
         return;
     var pbv=powerBarValue*2;
     var wysylka=player_pos+" "+alfa+" "+pbv;
@@ -266,20 +303,58 @@ function puszczenieMHandler(e){
         strzal();
 }
 
+var nowiGracze;
+var gracze_update=false;
+var trupy=new Array();
+
+function graczeUpdate(){
+    if(leci && trajktora<trajx.length-1)
+        return;
+    if(gracze_update){
+        var i;
+        enemies=new Array();
+        for(i=1;i<nowiGracze.length;i+=4) {
+            if(parseInt(nowiGracze[i+3])!=myId)
+                enemies.push({imie: nowiGracze[i],
+			pos: parseInt(nowiGracze[i+1]),
+			life: parseInt(nowiGracze[i+2])});
+            else{
+                player_pos=nowiGracze[i+1];
+                player_life=nowiGracze[i+2];
+            }
+        }
+        gracze_update=false;
+    }
+    if(trupy.length>0){
+        var j;
+        var czysc=true;
+        for(j in trupy){
+            if(trupy[j].t!=0){
+                czysc=false;
+                if(trupy[j].gdzie==player_pos){
+                    fieryDeath();
+                }
+            }
+            if(trupy[j].t==-1)
+                trupy[j].t=3;
+        }
+        if(czysc)
+            trupy=new Array();
+    }
+}
+
+function fieryDeath(){
+    player_pos=0;
+}
+
 function recv(e){
     //alert(e.data);
     var data=e.data.split(" ");
     if(data[0]=="Komunikat")
         alert(e.data);
     else if(data[0]=="Gracze"){
-        enemies=new Array();
-	var i;
-	for(i=1;i<data.length;i+=4) {
-                if(parseInt(data[i+3])!=myId)
-                    enemies.push({imie: data[i],
-				pos: parseInt(data[i+1]),
-				life: parseInt(data[i+2])});
-	}
+        nowiGracze=data;
+        gracze_update=true;
     }
     else if(data[0]=="Trajektoria"){
         
@@ -295,9 +370,18 @@ function recv(e){
                 trajy.push(parseInt(data[i+1]));
         }
     }
+    else if(data[0]=="Padl"){
+        var z={gdzie: parseInt(data[1]),t: -1};
+        trupy.push(z);
+    }
 }
 
 function przywitajSie(evt){
     alert("Connection open...");
     ws.send("Uklony "+graid);
+}
+
+function wsReconnect(){
+    ws.close();
+    ws=new WebSocket(WEBSOCKET);
 }

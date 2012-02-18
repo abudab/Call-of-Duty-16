@@ -1,0 +1,19 @@
+
+root { 
+    display: block;
+}
+
+body {
+    background-color: #cccccc;
+    padding: 1%;
+}
+
+.logo {
+    position:absolute;
+    margin-left:50%;
+    margin-top:20%
+}
+
+.areny{
+    position:absolute;
+}

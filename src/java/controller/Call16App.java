@@ -102,7 +102,7 @@ public class Call16App extends WebSocketApplication{
                     gracze[i].getId();
         }
         for(WebSocket i:getWebSockets()){
-            if(((Call16WebSocket)i).getGraid()==gdzie)
+            if(((Call16WebSocket)i).getGraid()==gdzie /*&& i.isConnected()*/)
                 i.send(msg);
         }
     }
@@ -122,12 +122,20 @@ public class Call16App extends WebSocketApplication{
         String msg="Trajektoria ";
         msg+=gry[graid].trajektoria(x0, v0, alfa);
         for(WebSocket ws:getWebSockets()){
-            if(((Call16WebSocket)ws).getGraid()==graid)
+            if(((Call16WebSocket)ws).getGraid()==graid /*&& ws.isConnected()*/)
                 ws.send(msg);
         }
         String [] ss=msg.split(" ");
-        if(gry[graid].czyTrafilo(Integer.parseInt(ss[ss.length-2]), Integer.parseInt(ss[ss.length-1])))
+        if(gry[graid].czyTrafilo(Integer.parseInt(ss[ss.length-2]), Integer.parseInt(ss[ss.length-1]))){
             sendUpdate(graid);
+            int [] ubici=gry[graid].getUbitychPozycje();
+            if(ubici!=null && ubici.length>0)
+                for(int i=0;i<ubici.length;++i)
+                    for(WebSocket ws: getWebSockets()){
+                        if(((Call16WebSocket)ws).getGraid()==graid /*&& ws.isConnected()*/)
+                            ws.send("Padl "+ubici[i]);
+                    }
+        }
         
     }
     

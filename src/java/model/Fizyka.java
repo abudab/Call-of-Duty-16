@@ -16,7 +16,6 @@ public class Fizyka {
      * nadającego się bezpośrednio do przekazania klientowi javascript. Ciąg: "x0 y0
      * x1 y1 ... xn yn" gdzie x0 i y0 to pozycja czołgu który strzela, a xn yn to 
      * punkt w którym eksploduje pocisk (okolica zderzenia trajektorii z terenem -
-     * TODO: polepszyć detekcję zderzeń żeby trafienia były dokładniejsze).
      * Próbkowanie jest ze stałym czasem dt.
      * @param ix0 pozycja x czołgu 
      * @param iv0 "siła strzału" := prędkość początkowa pocisku
@@ -24,7 +23,6 @@ public class Fizyka {
      * @return string w sam raz do wysłania klientowi (no, bez nagłówka)
      */
     public String trajektoria(int ix0,int iv0,int ialfa){
-       // return "0 0 100 100 200 200 300 300 400 200 500 300 600 200";
         ialfa=-ialfa;
         int iy0=igrek(ix0)+20;//pozycja początkowa y czołgu
         String traj=ix0+" "+iy0+" ";//pierwszy punkt trajektorii
@@ -36,40 +34,7 @@ public class Fizyka {
         y0=iy0;
         v0=iv0;
         alfa=Math.PI*(ialfa/180.);
-        /*Tu miała być mądrzejsza detekcja kolizji ale nie wyszła*/
-        /*for(i=wezel;(alfa<90 && i<teren.length)||(alfa>=90 && i>-1);i+=di){
-            if(teren[i]>parabola(i*x_res))
-                break;
-        }
-        i=i>teren.length-1?teren.length-1:i<0?0:i;
-        int x=i*x_res;
-        int y=igrek(x);
-        if(di>0 && i>0){
-            int dx=x_res/2;
-            x=igrek(x-dx)>parabola(x-dx)?x-dx:x;
-            dx=dx/2;
-            x=igrek(x-dx)>parabola(x-dx)?x-dx:x;
-            dx=dx/2;
-            x=igrek(x-dx)>parabola(x-dx)?x-dx:x;
-            dx=dx/2;
-            x=igrek(x-dx)>parabola(x-dx)?x-dx:x;
-            dx=dx/2;
-            x=igrek(x-dx)>parabola(x-dx)?x-dx:x;
-            y=(int) parabola(x);
-        }
-        else if(di<0 && i<teren.length-1){
-            int dx=x_res/2;
-            x=igrek(x+dx)>parabola(x+dx)?x+dx:x;
-            dx=dx/2;
-            x=igrek(x+dx)>parabola(x+dx)?x+dx:x;
-            dx=dx/2;
-            x=igrek(x+dx)>parabola(x+dx)?x+dx:x;
-            dx=dx/2;
-            x=igrek(x+dx)>parabola(x+dx)?x+dx:x;
-            dx=dx/2;
-            x=igrek(x+dx)>parabola(x+dx)?x+dx:x;
-            y=(int) parabola(x);
-        }*/
+        
         double dt=0.5;
         double t=dt;
         //boolean stanx=x>x0;

@@ -6,6 +6,7 @@ package model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  *Klasa reprezentuje grę na jednej arenie.
@@ -20,6 +21,7 @@ public class Gra {
     int [] teren;
     int [] pozycje;
     Fizyka fizyka;
+    List<Gracz> ubici=new ArrayList<Gracz>();
     
     /**
      * Inicjując należy podać unikalny numer jaki gra będzie mieć w systemie
@@ -49,8 +51,24 @@ public class Gra {
      * @return ile graczy obecnie liczy gra lub -1 gdy dodanie nie powiodło się
      */
     public int add(Gracz g){
+            Random r=new Random();
             g.setGid(id);
-            g.setPos(pozycje[gracze==null?0:gracze.length]);
+            if(gracze==null || gracze.length==0)
+                g.setPos(pozycje[r.nextInt(pozycje.length)]);
+            else{
+                for(int i=0;i<pozycje.length;++i){
+                    boolean nadasie=true;
+                    for(int j=0;j<gracze.length;++j)
+                        if(gracze[j].getPos()==pozycje[i]){
+                            nadasie=false;
+                            break;
+                        }
+                    if(nadasie){
+                        g.setPos(pozycje[i]);
+                        break;
+                    }
+                }
+            }
             if(gracze==null)
                 gracze=new Gracz[1];
             else if(gracze.length>max){
@@ -168,7 +186,6 @@ public class Gra {
     }
     
     public boolean czyTrafilo(int x,int y){
-        List ubici=null;
         if(gracze==null)
             return false;
         boolean trafilo=false;
@@ -184,13 +201,25 @@ public class Gra {
                     gracze[i].setLife(0);
                     if(ubici==null)
                         ubici=new ArrayList();
-                    ubici.add(gracze[i].getId());
+                    ubici.add(gracze[i]);
                 }
             }
         }
         if(ubici!=null)
-            for(Object id: ubici)
-                remove((Long)id);
+            for(Gracz g: ubici){
+                remove(g.getId());
+            }
         return trafilo;
+    }
+    
+    public int [] getUbitychPozycje(){
+        if(ubici==null || ubici.size()<1)
+            return null;
+        int [] up=new int[ubici.size()];
+        for(int i=0;i<ubici.size();++i){
+            up[i]=ubici.get(i).getPos();
+        }
+        ubici=new ArrayList<Gracz>();
+        return up;
     }
 }

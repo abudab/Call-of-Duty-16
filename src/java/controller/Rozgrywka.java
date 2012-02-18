@@ -27,9 +27,7 @@ public class Rozgrywka {
     Gracz [] gracze=null;
     Gra [] gry=null;
     List tereny;
-    int [] terrain={130, 260, 400, 450, 430, 410, 370, 270, 190, 130, 100,
-                    90, 120, 180, 260, 430, 530, 480, 390, 400, 500,
-                    530, 400, 290, 200, 130, 40, 50, 160, 280, 270};
+
     @PersistenceContext(unitName = "Call16PU")
     private EntityManager em;
     long lastid=0;

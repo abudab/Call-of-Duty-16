@@ -53,6 +53,7 @@ public class Sesja implements HttpSessionBindingListener {
     protected void finalize() throws Throwable {
         if(g!=null)
             rozgrywka.remove(g,graid);
+        super.finalize();
     }
 
     /**
@@ -154,10 +155,10 @@ public class Sesja implements HttpSessionBindingListener {
     public void seppuku(){
         if(g!=null){
             rozgrywka.remove(g, graid);
-            myid=-1;
             g=null;
-            nick=null;
         }
+        myid=-1;
+        nick=null;
     }
     
 }
