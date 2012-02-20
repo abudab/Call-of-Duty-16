@@ -10,6 +10,7 @@
     </h:head>
     <h:body onload="siu()">
         <h1>Mordowanie na ekranie</h1>
+        <div class="reszta">
         <c:if test="${sesja.myid>0}">
             Ty już grasz jako #{sesja.nick}.<br/>
             Kliknij aby wrócić do gry.
@@ -18,9 +19,31 @@
             </h:form>
         </c:if>
         <c:if test="${sesja.myid==-1}">
-        <h2 onclick="arenyKlik()">Dostępne areny</h2>
+            <h2 onclick="instrukcjeKlik()" class="klikalnyHeader">Ale o co chodzi?</h2>
+            <div class="instrukcje" id="instrukcje" style="display:none">
+                <p>Wciel się w rolę załogi czołgu "Mściciel mk.1" i zniszcz jak najwięcej
+czołgów przeciwników zanim ich pociski dosięgną Ciebie.</p>
+                <img src="info3.png"/><img src="info4.png"/>
+                <p>Rozwiń listę dostępnych aren klikając na nagłówek <b>Dostępne areny</b>.
+Wybierz arenę na której jest wolne miejsce (przy każdej arenie podano
+maksymalną ilość graczy), przedstaw się podając <b>pseudonim operacyjny</b>
+i naciśnij <b>dołącz</b>.</p>
+                <p>Strzelasz używając <b>lewego klawisza myszy</b>, ale poczekaj! Najpierw <b>górną i
+dolną strzałką na klawiaturze</b> ustaw odpowiedni kąt strzału - pociski posuszają się
+po paraboli. Mając <b>wciśnięty</b> lewy przycisk myszy poczekaj aż elektromagnetyczne
+działo Twojego czołgu naładuje się do odpowiedniej mocy - nie chciałbyś aby pocisk eksplodował
+tuż pod Twoimi stopami. W odpowiednim momencie (ładowanie/rozładowywanie kondensatorów symbolizuje
+animowany czerwony pasek) <b>puść lewy przycisk myszy</b>. Wiedz, że marnując czas źle obliczonymi strzałami
+wystawiasz się na trafienia przeciwników.</p>
+                <img src="info1.png"/>
+                <img src="info2.png"/>
+                <p>Możesz też wykonać ruch naciskając <b>środkowy lub prawy klawisz myszy</b>. Czołg
+                przesunie się w stronę, w którą wskazuje lufa. Zarówno strzał jak i ruch zużywają energię
+                i wymagają czasu na jej uzupełnienie.</p>
+            </div>
+        <h2 onclick="arenyKlik()" class="klikalnyHeader">Dostępne areny</h2>
         <c:set var="ktora" value="0"/>
-        <div class="areny" id="areny" style="display:block" >
+        <div class="areny" id="areny" style="display:none" >
             <c:forEach var="i" items="${powitalna.nazwy}">
                 <div class="arena">
                     <h3>#{i}</h3>
@@ -52,6 +75,8 @@
             </c:forEach>
         </div>
         </c:if>
+            Kliknij na nagłówek aby zobaczyć zawartość.
+        </div>
         <div class="logo">
             <img src="logo.png"/>
         </div>

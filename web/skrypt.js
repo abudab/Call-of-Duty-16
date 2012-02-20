@@ -1,31 +1,38 @@
-var pl;
-var xres;
-var terrain_y;
-var player_pos;
-var player_life;
-var msciwoj_mk1;
-var powerBar=false;
-var powerBarValue;
-var powerBarValueD;
-var alfa=0;
-var alfaD=0;
-var enemies;
-var start;
-var end;
-var t35;
-var ws;
-var myId;
-var playerEye;
-var leci=false;
-var trajx;
-var trajy;
-var trajktora;
+var pl; //płótno
+var xres; //odległość x pomiędzy kolejnymi węzłami terenu
+var terrain_y; //tablica węzłów terenu (wartości y)
+var player_pos; //pozycja x gracza
+var player_life; //punkty życia gracza
+var msciwoj_mk1; //obrazek czołgu gracza
+var powerBar=false; //czy ma być wyświetlony pasek siły strzału
+var powerBarValue; //siła strzału/długość paska siły strzału
+var powerBarValueD; //zmiana siły strzału na klatkę animacji
+var alfa=0; //kąt strzału
+var alfaD=0; //zmiana kąta strzału na klatkę animacji
+var enemies; //tablica z przeciwnikami
+var start; //współrzędna lewej krawędzi okna w UW terenu
+var end; //współrzędna prawej krawędzi okna w UW terenu
+var t35; //obrazek czołgu przeciwników
+var ws; //web socket
+var myId; //id gracza na serwerze
+var playerEye; //pozycja środka ekranu w UW terenu - zmienia się przy przesuwaniu planszy
+var leci=false; //czy trwa animacja trajektorii
+var trajx; //trajektoria pocisku tablica z x-ami
+var trajy; //trajektoria pocisku tablica z y-ami
+var trajktora; //który punkt trajektorii w tej klatce animacji
 
-var dlugoscplanszy;
-var graid;
+var dlugoscplanszy; //długość planszy xres*(ile el. tablicy terrain_y)
+var graid; //id areny na serwerze
+var ruchupdate=0; //przesunięcie czołgu które należy wykonać
+var ruchid; //id czołgu który jest przesuwany
+var reload=0; //okres bezczynności po strzale/ruchu w ms.
+var wciazproboj=true;
 
 var WEBSOCKET="ws://127.0.0.1:8080/Call16";
 
+/*Funkcja wywołuje się przy ładowaniu dokumentu i ustawia
+ *odpowiednie wartości zmiennych globalnych oraz inicjuje web sockety.
+ **/
 function letsRoll(){
 	pl=document.getElementById('tutaj');
 	xres=parseInt(document.getElementById('terrain_xres').innerHTML);
@@ -45,7 +52,8 @@ function letsRoll(){
 		var enemyData=eL[i].innerHTML.split(" ");
 		enemies.push({imie: enemyData[0],
 				pos: parseInt(enemyData[1]),
-				life: parseInt(enemyData[2])});
+				life: parseInt(enemyData[2]),
+                                id: parseInt(enemyData[3])});
 	}
         graid=parseInt(document.getElementById('graid').innerHTML);
         playerEye=player_pos;
@@ -60,10 +68,21 @@ function letsRoll(){
         //ws = new WebSocket("ws://192.168.242.155:8080/Call16/WSServlet");
         ws = new WebSocket(WEBSOCKET);
         ws.onopen = przywitajSie;
-        ws.onclose = function(evt) {alert("Connection closed ...");};
+        ws.onclose = function(evt) {alert("Connection closed ..."); 
+                                        setTimeout('wsConnect()',1000);};
         ws.onmessage = recv;
 }
 
+/*
+ *Ponawia połączenie - wywoływane w interwałach 1s po nieoczekiwanym przerwaniu transmisji
+ **/
+function wsConnect(){
+    if(wciazproboj)
+        ws=new WebSocket(WEBSOCKET);
+}
+
+/*Rysuje ehm... teren
+ */
 function rysujTeren(k){
 	k.strokeStyle="rgb(0,0,0)";
 	k.beginPath();
@@ -93,18 +112,17 @@ function rysujTeren(k){
 	k.fill();
 }
 
+/*Rysuje czołg gracza, powerbar, łuk kątu strzału, info o reload itp.
+ */
 function rysujGracza(k){
-	/*var x=player_pos<500?player_pos:player_pos>1500?player_pos-1000:500;
-	var y=terrain_y[Math.floor(player_pos/xres)];
-	var dy=(terrain_y[Math.floor(player_pos/xres)==terrain_y.length-1?terrain_y.length-1:
-		Math.floor(player_pos/xres)+1]-terrain_y[Math.floor(player_pos/xres)])*
-		((player_pos%xres)/xres);*/
+        //współrzędne czołgu na ekranie
         var x=player_pos-start;
         var y=terrain_y[Math.floor(player_pos/xres)];
 	var dy=(terrain_y[Math.floor(player_pos/xres)==terrain_y.length-1?terrain_y.length-1:
 		Math.floor(player_pos/xres)+1]-terrain_y[Math.floor(player_pos/xres)])*
 		((player_pos%xres)/xres);
 	y+=dy;
+        //Łuk kąta strzału
 	k.strokeStyle="rgb(255,0,255)";
 	k.beginPath();
 	k.arc(x,
@@ -114,7 +132,29 @@ function rysujGracza(k){
 		(Math.PI/180)*alfa,
 		true);
 	k.stroke();
+        //rysunek czołgu
 	k.drawImage(msciwoj_mk1,x-Math.floor(msciwoj_mk1.width/2),800-y-msciwoj_mk1.height);
+        //ruchoma lufa
+        k.strokeStyle="rgb(0,0,0)";
+        k.lineWidth=5;
+        k.beginPath();
+        if(alfa>=-90){
+            k.moveTo(x-Math.floor(msciwoj_mk1.width/2)+25,800-y-msciwoj_mk1.height+8);
+            k.lineTo(x-Math.floor(msciwoj_mk1.width/2)+25+
+                Math.cos( (Math.PI/180)*Math.abs(alfa) )*10,
+                800-y-msciwoj_mk1.height+8-
+                    Math.sin( (Math.PI/180)*Math.abs(alfa) )*10 );
+        }
+        else{
+            k.moveTo(x-Math.floor(msciwoj_mk1.width/2)+17,800-y-msciwoj_mk1.height+8);
+            k.lineTo(x-Math.floor(msciwoj_mk1.width/2)+17+
+                Math.cos( (Math.PI/180)*Math.abs(alfa) )*10,
+                800-y-msciwoj_mk1.height+8-
+                    Math.sin( (Math.PI/180)*Math.abs(alfa) )*10 );
+        }
+        k.stroke();
+        k.lineWidth=1;
+        //wskaźnik siły strzału
 	if(powerBar){
 		k.fillStyle="rgb(255,0,0)";
 		k.fillRect(x-Math.floor(msciwoj_mk1.width/2),
@@ -123,10 +163,23 @@ function rysujGracza(k){
 		powerBarValueD=powerBarValue==100?-5:powerBarValue==5?5:powerBarValueD;
 		powerBarValue=powerBarValue+powerBarValueD;	
 	}
+        //info że trwa ładowanie (nie można strzelać)
+        if(reload>0){
+            k.fillStyle="rgb(0,0,0)";
+            k.fillText("Recharging: "+Math.floor(reload/10),460,390);
+            --reload;
+        }
+        //nowe wartości zmiennych
 	alfa=alfa+alfaD<-180?-180:alfa+alfaD>0?0:
 		alfa+alfaD;
+        if(alfa<-90)
+            msciwoj_mk1=document.getElementById("msciwoj_mirrored");
+        else
+            msciwoj_mk1=document.getElementById("msciwoj_mk1");
 }
 
+/*Rysuje wskaźniki poziomu życia gracza i przeciwników w prawym górnym rogu
+*/
 function rysujLifeBar(k){
         if(player_pos>0){
 	if(player_life>66)
@@ -158,8 +211,10 @@ function rysujLifeBar(k){
 	
 }
 
+/*Rysuje wrogów oraz odpowiada za animację eksplozji
+ */
 function rysujWrogow(k){
-	for (i in enemies){
+	for (i in enemies){//rysowanie wrogów
 		if(enemies[i].pos>start && enemies[i].pos<end){
 			var x=enemies[i].pos-start;
 			var y=terrain_y[Math.floor(enemies[i].pos/xres)];
@@ -173,7 +228,7 @@ function rysujWrogow(k){
 				800-y-2*t35.height);
 		}
 	}
-        for(j in trupy){
+        for(j in trupy){//eksplozje
             if(trupy[j].t>0){
                 y=terrain_y[Math.floor(trupy[j].gdzie/xres)];
 		dy=(terrain_y[Math.floor(trupy[j].gdzie/xres)==terrain_y.length-1?terrain_y.length-1:
@@ -181,13 +236,13 @@ function rysujWrogow(k){
 				((trupy[j].gdzie%xres)/xres);
 		y+=dy;
                 switch(trupy[j].t){
-                    case 3: 
+                    case 3:
                         k.fillStyle="rgb(255,0,0)"
                         k.beginPath();
                         k.arc(trupy[j].gdzie-start,800-y-t35.height/2,20,0,Math.PI*2,true);
                         k.fill();
                         break;
-                    case 2: 
+                    case 2:
                         k.fillStyle="rgb(255,255,0)"
                         k.beginPath();
                         k.arc(trupy[j].gdzie-start,800-y-t35.height/2,30,0,Math.PI*2,true);
@@ -209,8 +264,9 @@ function rysujWrogow(k){
         }
 }
 
-var czyn=0;
+var czyn=0; //wartość przesunięcia "oka" w jednej klatce animacji
 
+/*Rysuje lecący pocisk*/
 function rysujTrajektorie(k){
     if(leci){
             if(trajktora>trajx.length+2)
@@ -236,10 +292,35 @@ function rysujTrajektorie(k){
         }
 }
 
+/*Odpowiada za animowaną zmianę położenia czołgu*/
+function naprawdeRuszKogos(){
+    if(ruchupdate==0 || leci)
+        return;
+    var deix=ruchupdate;
+    if(Math.abs(ruchupdate)<3)
+        deix=ruchupdate;
+    else
+        deix=ruchupdate>0?3:-3;
+    if(ruchid==myId){
+        player_pos=Math.round(player_pos+deix);
+    }
+    else{
+        var i;
+        for(i=0;i<enemies.length;++i){
+            if(enemies[i].id==ruchid){
+                enemies[i].pos=Math.round(enemies[i].pos+deix);
+                break;
+            }
+        }
+    }
+    ruchupdate=Math.round(ruchupdate-deix);
+}
+
+/*rysuje kolejne warstwy animacji i uaktualnia zmienne na następną klatkę*/
 function animuj(){
 	var k=pl.getContext('2d');
 	k.fillStyle="rgb(150,200,250)";
-	k.fillRect(0,0,1000,800);
+	k.fillRect(0,0,1000,800);//niebo
 	rysujTeren(k);
         if(player_pos>0)
             rysujGracza(k);
@@ -248,65 +329,98 @@ function animuj(){
         rysujTrajektorie(k);
         graczeUpdate();
 	ruszGracza();
+        naprawdeRuszKogos();
         
-	/*if(player_pos==3000)
-		czyn=-10;
-	if(player_pos==0)
-		czyn=10;
-	player_pos+=czyn;*/
+	
 }
 
+/*Nie rusza gracza tylko "oko" - pozwala oglądać planszę większą niż okno.
+ */
 function ruszGracza(){
-	/*player_pos=player_pos+czyn>1950?1950:player_pos+czyn<50?50:
-		player_pos+czyn;*/
+
     playerEye=playerEye+czyn>dlugoscplanszy-500?dlugoscplanszy-500:playerEye+czyn<500?500:
 		playerEye+czyn;
 }
 
 
-
+/*
+ * Obsługa naciśnięcia klawisza na klawiaturze
+ */
 function wcisniecieHandler(e){
-	if(e.keyCode==37)
+	if(e.keyCode==37)//strzałka w lewo - przesunięcie "oka" w lewo
 		czyn=-20;
-	else if(e.keyCode==39)
+	else if(e.keyCode==39) //strzałka w prawo - przesunięcie "oka" tamże
 		czyn=20;
-	else if(e.keyCode==38)
+	else if(e.keyCode==38) //strzałka w górę - ruch lufy do góry
 		alfaD=-5;
-	else if(e.keyCode==40)
+	else if(e.keyCode==40) //strzałka w dół - ruch lufy w dół
 		alfaD=5;
 }
 
+/*
+ * Obsługa puszczenia klawisza na klawiaturze
+ */
 function puszczenieHandler(e){
-	if(e.keyCode==37 || e.keyCode==39)
+	if(e.keyCode==37 || e.keyCode==39)//strzałka w lewo/prawo - stop przesunięcia "oka"
 		czyn=0;
-	else if(e.keyCode==38 || e.keyCode==40)
+	else if(e.keyCode==38 || e.keyCode==40)//strzałka w górę/dół - stop ruchu lufy
 		alfaD=0;
 }
 
+/*
+ * Wysyła wiadomość o wykonaniu strzału
+ */
 function strzal(){
-    if(leci || player_pos==0)
+    if(leci || player_pos==0 || ruchupdate!=0 || reload!=0)
         return;
     var pbv=powerBarValue*2;
     var wysylka=player_pos+" "+alfa+" "+pbv;
     //alert("wysylam: "+wysylka);
     ws.send(wysylka);
+    reload=pbv<40?40:pbv;
     //ws.close();
 }
 
+/*
+ * Obsługa wciśnięcia klawisza myszy
+ */
 function wcisniecieMHandler(e){
+    if(e.which==1){//lewy klawisz - zwiększanie mocy strzału
 	powerBar=true;
 	powerBarValue=5;
+    }
+    else if(e.which>=2){//inny klawisz - ruch do przodu/do tyłu
+        if(!leci && ruchupdate==0 && player_pos>0 && reload==0){
+            if(alfa>-90 && player_pos<dlugoscplanszy-50){
+                ws.send("Ruch "+myId+" 1");//do przodu
+                reload=40;
+            }
+            else if(player_pos>50){
+                ws.send("Ruch "+myId+" -1");//do tyłu
+                reload=40;
+            }
+        }
+            
+    }
 }
 
+/*
+ * Obsługa puszczenia klawisza myszy
+ */
 function puszczenieMHandler(e){
+    if(e.which==1){//lewy km. strzał z aktualną siłą
 	powerBar=false;
         strzal();
+    }
 }
 
-var nowiGracze;
-var gracze_update=false;
-var trupy=new Array();
+var nowiGracze; //tablica w której czekają uaktualnione dane graczy otrzymane z serwera
+var gracze_update=false; //czy należy uaktualnić dane gracza i przeciwników teblicą nowiGracze
+var trupy=new Array();//tablica czołgów które należy usunąć z listy i wyświetlić ich eksplozje
 
+/*
+ * Zamienia dane gracza i przeciwników na nowe gdy (są jakieś nowe oraz )animacja lotu pocisku zakończona
+ */
 function graczeUpdate(){
     if(leci && trajktora<trajx.length-1)
         return;
@@ -317,10 +431,11 @@ function graczeUpdate(){
             if(parseInt(nowiGracze[i+3])!=myId)
                 enemies.push({imie: nowiGracze[i],
 			pos: parseInt(nowiGracze[i+1]),
-			life: parseInt(nowiGracze[i+2])});
+			life: parseInt(nowiGracze[i+2]),
+                        id: nowiGracze[i+3]});
             else{
-                player_pos=nowiGracze[i+1];
-                player_life=nowiGracze[i+2];
+                player_pos=parseInt(nowiGracze[i+1]);
+                player_life=parseInt(nowiGracze[i+2]);
             }
         }
         gracze_update=false;
@@ -343,10 +458,16 @@ function graczeUpdate(){
     }
 }
 
+/*
+ * Konsekwencje otrzymania wiadomości o śmierci gracza
+ */
 function fieryDeath(){
     player_pos=0;
 }
 
+/*
+ * Obsługa otrzymania wiadomości przez web socket
+ */
 function recv(e){
     //alert(e.data);
     var data=e.data.split(" ");
@@ -374,8 +495,15 @@ function recv(e){
         var z={gdzie: parseInt(data[1]),t: -1};
         trupy.push(z);
     }
+    else if(data[0]=="Ruch"){
+        ruchid=Number(data[1]);
+        ruchupdate=Number(data[2]);
+    }
 }
 
+/*
+ * Wykonuje się po uzyskaniu połączenia przez web socket
+ */
 function przywitajSie(evt){
     alert("Connection open...");
     ws.send("Uklony "+graid);
@@ -384,4 +512,9 @@ function przywitajSie(evt){
 function wsReconnect(){
     ws.close();
     ws=new WebSocket(WEBSOCKET);
+}
+
+function uciekaj(){
+    wciazproboj=false;
+    ws.close();
 }

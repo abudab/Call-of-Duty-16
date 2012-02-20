@@ -15,6 +15,18 @@ function arenyKlik(){
         
 }
 
+/*zwijacz-rozwijacz*/
+function instrukcjeKlik(){
+    var bylo=document.getElementById("instrukcje").style.display;
+    if(bylo=="none"){
+        document.getElementById("instrukcje").style.display="block";
+    }
+    else{
+        document.getElementById("instrukcje").style.display="none";
+    }
+        
+}
+
 /*rysowanie miniatur + dopisywanie id aren do właściwych ukrytych inputów*/
 function siu(){
     var kanwasy=document.getElementsByTagName("canvas");

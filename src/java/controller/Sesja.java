@@ -8,6 +8,7 @@ import java.util.Random;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionBindingListener;
 import model.Gracz;
@@ -49,12 +50,12 @@ public class Sesja implements HttpSessionBindingListener {
      * To chyba nie jest dobre rozwiązanie...
      * @throws Throwable 
      */
-    @Override
+    /*@Override
     protected void finalize() throws Throwable {
         if(g!=null)
             rozgrywka.remove(g,graid);
         super.finalize();
-    }
+    }*/
 
     /**
      * Creates a new instance of Sesja
@@ -107,7 +108,8 @@ public class Sesja implements HttpSessionBindingListener {
             if(gracze[i].getId()!=myid)
                 enemies[i]=gracze[i].getName()+" "+
                         gracze[i].getPos()+" "+
-                        gracze[i].getLife();
+                        gracze[i].getLife()+" "+
+                        gracze[i].getId();
         }
         return enemies;
     }
@@ -159,6 +161,8 @@ public class Sesja implements HttpSessionBindingListener {
         }
         myid=-1;
         nick=null;
+        FacesContext context = FacesContext.getCurrentInstance(); 
+        context.getExternalContext().getSessionMap().remove("#{sesja}");
     }
     
 }

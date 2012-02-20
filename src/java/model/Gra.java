@@ -177,14 +177,32 @@ public class Gra {
         return null;
     }
     
+    /**
+     * Wywołuje odpowiednią funkcję z instancji klasy Fizyka
+     * @param ix0
+     * @param iv0
+     * @param ialfa
+     * @return 
+     */
     public String trajektoria(int ix0,int iv0,int ialfa){
         return fizyka.trajektoria(ix0, iv0, ialfa);
     }
     
+    /**
+     * Wywołuje odpowiednią funkcję z instancji klasy Fizyka
+     * @param x
+     * @return 
+     */
     public int igrek(int x){
         return fizyka.igrek(x);
     }
     
+    /**
+     * Oblicza obrażenia wywołane przez strzał i uaktualnia dane graczy.
+     * @param x pozycja x eksplozji pocisku
+     * @param y pozycja y eksplozji pocisku
+     * @return prawda gdy wykryto obrażenia (czyli gdy należy przekazać klientom nowe dane)
+     */
     public boolean czyTrafilo(int x,int y){
         if(gracze==null)
             return false;
@@ -212,6 +230,11 @@ public class Gra {
         return trafilo;
     }
     
+    /**
+     * Na podstawie listy z poprzednio wykonanego strzału zwraca pozycje 
+     * graczy których życie dobiło zera.
+     * @return lista pozycji graczy
+     */
     public int [] getUbitychPozycje(){
         if(ubici==null || ubici.size()<1)
             return null;
@@ -221,5 +244,32 @@ public class Gra {
         }
         ubici=new ArrayList<Gracz>();
         return up;
+    }
+    
+    /**
+     * Porusza gracza w wybranym kierunku gdy jest to możliwe.
+     * @param ktorego id gracza którego należy przesunąć
+     * @param jak dodatnie do przodu inaczej do tyłu
+     * @return wartość o jaką zmieniono pozycję gracza. Zero gdy operacja nie
+     * miała miejsca.
+     */
+    public int ruszGracza(long ktorego,int jak){
+        int dx=0;
+        if(gracze==null)
+            return 0;
+        for(int i=0;i<gracze.length;++i){
+            if(gracze[i].getId()==ktorego){
+                if(jak>0 && gracze[i].getPos()<teren.length*x_res-50){
+                    dx=20;
+                    gracze[i].setPos(gracze[i].getPos()+dx);
+                }
+                else if(gracze[i].getPos()>50){
+                    dx=-20;
+                    gracze[i].setPos(gracze[i].getPos()+dx);
+                }
+                break;
+            }
+        }
+        return dx;
     }
 }

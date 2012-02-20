@@ -19,7 +19,8 @@
 <graid id="graid">
     #{sesja.graid}
 </graid>     
-<img id="msciwoj_mk1" src="Msciwoj_mk1.png" />
+<img id="msciwoj_mk1" src="msc1.png" />
+<img id="msciwoj_mirrored" src="msc2.png"/>
 <img id="t35" src="T35.png" />
 <terrain id="terrain_xres">
     #{sesja.xres}
@@ -43,9 +44,8 @@
 </canvas>
 
         <h:form>
-            <h:commandButton action="#{sesja.seppuku()}" value="Eject, eject!!!"/>
-            <input type="button" onclick="wsReconnect()" value="Restart połączenia"/>
-            <h:commandButton action="index" value="Wstecz" />
+            <h:commandButton onclick="uciekaj()" action="#{sesja.seppuku()}" value="Eject, eject!!!"/>
+            <h:commandButton onclick="uciekaj()" action="index" value="Wstecz" />
         </h:form>
     </h:body>
 </html>

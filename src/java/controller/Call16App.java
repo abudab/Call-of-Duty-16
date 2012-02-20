@@ -63,7 +63,18 @@ public class Call16App extends WebSocketApplication{
         if(text.startsWith("chat")){//broadcast - nie używane
             broadcastShout(text.split(" ")[1],text.substring(text.indexOf(" ", 5)));
         }
-        else {//strzał
+        else if(text.startsWith("Ruch")){
+            long kto=Long.parseLong(text.split(" ")[1]);
+            int dx=gry[((Call16WebSocket)socket).getGraid()].ruszGracza(kto,
+                    Integer.parseInt(text.split(" ")[2]));
+            if(dx!=0){
+                for(WebSocket i:getWebSockets()){
+                    if(((Call16WebSocket)i).getGraid()==((Call16WebSocket)socket).getGraid() /*&& i.isConnected()*/)
+                        i.send("Ruch "+kto+" "+dx);
+                }
+            }
+        }
+        else{//strzał
             
             strzel(text,((Call16WebSocket)socket).getGraid());
         }
