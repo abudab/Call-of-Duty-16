@@ -66,7 +66,14 @@ public class Rozgrywka {
     }
     
     
-    
+    /**
+     * Usiłuje dodać gracza do gry na arenie graid. Gdy się powiedzie
+     * wywołuje sendUpdate serwera web socketów
+     * @param name pseudonim gracza
+     * @param graid numer areny
+     * @return nieujemny identyfikator gracza na serwerze lub -1 gdy
+     * dodanie nie powiodło się.
+     */
     public long add(String name,int graid){
         if(graid<0 || graid>gry.length-1 || !gry[graid].canIJoin()){
             return -1;
@@ -76,23 +83,45 @@ public class Rozgrywka {
         g.setLife(100);
         g.setId(lastid);
         g.setName(name);    
-        gry[graid].add(g);
+        int result=gry[graid].add(g);
+        if(result==-1){
+            lastid--;
+            return -1;
+        }
         app.sendUpdate(graid);
         return lastid;
     }
     
-    public void remove(Gracz g,int graid){
-        gry[graid].remove(g.getId());
+
+    /**
+     * Usuwa gracza z gry i wysyła update klientom websocket.
+     * @param id id gracza
+     * @param graid  id gry
+     */
+    public void remove(long id,int graid){
+        if(id<0 || gry==null || graid<0 || graid>gry.length-1)
+            return;
+        gry[graid].remove(id);
         app.sendUpdate(graid);
     }
     
-    
+    /**
+     * Zwraca tablicę węzłów terenu
+     * @param graid numer areny
+     * @return 
+     */
     public int [] getTerrain(int graid){
-        if(graid>gry.length)
+        if(graid>gry.length-1 || graid<0)
             return null;
         return gry[graid].getTeren();
     }
     
+    /**
+     * Zwraca gracza o danym id.
+     * @param id id gracza
+     * @param graid id gry w której gra gracz
+     * @return gracz lub null gdy nie ma takiego
+     */
     public Gracz getGracz(long id,int graid){
         if(graid>-1 && graid<gry.length && id>-1)
             return gry[graid].getGracz(id);
@@ -104,6 +133,10 @@ public class Rozgrywka {
         em.persist(object);
     }
     
+    /**
+     * Zwraca listę nazw aren
+     * @return 
+     */
     public String [] getNazwyTerenow(){
         String [] r=new String[tereny.size()];
         int i=0;
@@ -114,6 +147,10 @@ public class Rozgrywka {
         return r;
     }
     
+    /**
+     * Zwraca listę odległości pomiędzy węzłami aren.
+     * @return 
+     */
     public int [] getXresTerenow(){
         int [] r=new int[tereny.size()];
         int i=0;
@@ -128,6 +165,11 @@ public class Rozgrywka {
         return ((Teren)tereny.get(i)).getIgrekList();
     }*/
     
+    /**
+     * Zwraca tablicę graczy z areny i
+     * @param i numer areny
+     * @return aktualnie grający gracze na arenie
+     */
     public Gracz [] getGracze(int i){
         if(i<gry.length && i>-1){
             return gry[i].getGracze();
@@ -136,6 +178,11 @@ public class Rozgrywka {
             return null;
     }
     
+    /**
+     * Zwraca maksymalną ilość graczy na arenie i
+     * @param i numer areny
+     * @return 
+     */
     public int getMGracze(int i){
         if(i<gry.length && i>-1){
             return gry[i].getMax();
@@ -144,10 +191,27 @@ public class Rozgrywka {
             return 0;
     }
     
+    /**
+     * Zwraca odległość x między węzłami terenu areny i
+     * @param i numer areny
+     * @return 
+     */
     public int getXresTerenu(int i){
         if(i<gry.length && i>-1)
             return gry[i].getX_res();
         return 500;
+    }
+    
+    /**
+     * Sprawdza czy gracz gra na arenie.
+     * @param id id gracza
+     * @param graid numer areny
+     * @return prawda gry gracz gra na arenie, fałsz gdy nie
+     */
+    public boolean czyGra(long id,int graid){
+        if(id<0 || graid<0 || gry==null || graid>gry.length-1)
+            return false;
+        return gry[graid].czyGra(id);
     }
 
 }

@@ -4,14 +4,11 @@
  */
 package controller;
 
-import java.util.Random;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
-import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpSessionBindingEvent;
-import javax.servlet.http.HttpSessionBindingListener;
-import model.Gracz;
+//import javax.servlet.http.HttpSessionBindingEvent;
+//import javax.servlet.http.HttpSessionBindingListener;
 
 /**
  *To jest klasa która odpowiada za sesję - połączenie gracza z serwerem.
@@ -20,42 +17,49 @@ import model.Gracz;
  */
 @ManagedBean
 @SessionScoped
-public class Sesja implements HttpSessionBindingListener {
+public class Sesja /*implements HttpSessionBindingListener */{
    
-    private Gracz g=null;
+
     private long myid=-1;
     @EJB
     private Rozgrywka rozgrywka;
     private String nick=null;
     private int graid=-1;
 
+    /**
+     * Zwraca numer areny, na której gra gracz przypisany do sesji
+     * @return id gry
+     */
     public int getGraid() {
         return graid;
     }
 
+    /**
+     * Ustawia graczowi z sesji arenę na której gra
+     * @param graid id gry
+     */
     public void setGraid(int graid) {
         this.graid = graid;
     }
 
+    /**
+     * Zwraca pseudonim gracza przypisanego do sesji
+     * @return nick
+     */
     public String getNick() {
+        if(nick==null)
+            return "";
         return nick;
     }
 
+    /**
+     * Ustawia graczowi z sesji pseudonim widoczny dla pozostałych graczy.
+     * @param nick 
+     */
     public void setNick(String nick) {
         this.nick = nick;
     }
     
-    /**
-     * Gracz powienien zniknąć jak sesja wygaśnie i instancja zginie.
-     * To chyba nie jest dobre rozwiązanie...
-     * @throws Throwable 
-     */
-    /*@Override
-    protected void finalize() throws Throwable {
-        if(g!=null)
-            rozgrywka.remove(g,graid);
-        super.finalize();
-    }*/
 
     /**
      * Creates a new instance of Sesja
@@ -64,7 +68,7 @@ public class Sesja implements HttpSessionBindingListener {
         
     }
     
-    public String getTerrain(){
+    /*public String getTerrain(){
         String r="";
         int [] y=rozgrywka.getTerrain(graid);
         if(y!=null){
@@ -112,57 +116,89 @@ public class Sesja implements HttpSessionBindingListener {
                         gracze[i].getId();
         }
         return enemies;
-    }
+    }*/
 
     /**
      * Pytając o id gracza próbujemy go wepchnąć do gry.
      * Próba dołączenia do gry wystąpi, gdy znany jest nick i wybrana arena,
-     * a nie ma jeszcze gracza w grze.
-     * @return 
+     * ale identyfikator gracza jest nieustawiony - kombinacja która występuje po kliknięciu
+     * na "Dołącz" na stronie startowej. Gdy próba dołączenia gracza będzie pomyślna zwrócony
+     * będzie uzyskany identyfikator.
+     * Gdy identyfikator gracza jest już ustawiony sprawdzana jest obecność gracza w grze.
+     * @return identyfikator gracza - liczba nieujemna lub -1 gdy gracz nie gra
      */
     public long getMyid() {
-        if(g==null)
-            if(myid==-1 && nick!=null && graid>-1)
+        if(myid==-1)
+            if(nick!=null && graid!=-1)
+                myid=rozgrywka.add(nick,graid);
+            else
+                return -1;
+        else{
+            if(!rozgrywka.czyGra(myid, graid) || nick==null){
+                myid=-1;
+                nick=null;
+            }
+        }
+        return myid;
+       /* if(g==null)//sesja (jeszcze) nie ma przypisanego gracza
+            if(myid==-1 && nick!=null && graid>-1) //id niezainicjowane, ale jest ustawiony nick i id gry
+                                                // to znaczy, że gracz dopiero wcisnął "dołącz"
                 myid=rozgrywka.add(nick,graid);
         if(myid>-1)
             g=rozgrywka.getGracz(myid,graid);
-        return myid;
+        return myid;*/
     }
     
-    public int getIlegraczy(){
+    /*public int getIlegraczy(){
         Gracz [] ge=rozgrywka.getGracze(graid);
         if(ge==null)
             return 0;
         return ge.length;
-    }
+    }*/
 
-    @Override
+    /*@Override
     public void valueBound(HttpSessionBindingEvent event) {
         
-    }
+    }*/
 
     /**
      * Handler ma wywalić gracza jeśli sesja wygaśnie.
      * Czy działa? Nie wiem, chyba nie.
      * @param event 
      */
-    @Override
+    /*@Override
     public void valueUnbound(HttpSessionBindingEvent event) {
         seppuku();
-    }
+    }*/
     
     /**
-     * Wywalenie gracza z gry 
+     * Usunięcie gracza z gry 
      */
     public void seppuku(){
-        if(g!=null){
+        if(myid>-1){
+            rozgrywka.remove(myid,graid);
+        }
+        /*else if(g!=null){
+            rozgrywka.remove(g.getId(),graid);
+        }*/
+        myid=-1;
+        nick=null;
+        /*try{
+            FacesContext context = FacesContext.getCurrentInstance(); 
+            context.getExternalContext().getSessionMap().remove("#{sesja}");
+        }
+        catch(Exception e){}*/
+        /*if(g!=null){
             rozgrywka.remove(g, graid);
-            g=null;
+            //g=null;
         }
         myid=-1;
         nick=null;
-        FacesContext context = FacesContext.getCurrentInstance(); 
-        context.getExternalContext().getSessionMap().remove("#{sesja}");
+        try{
+            FacesContext context = FacesContext.getCurrentInstance(); 
+            context.getExternalContext().getSessionMap().remove("#{sesja}");
+        }
+        catch(Exception e){}*/
     }
     
 }

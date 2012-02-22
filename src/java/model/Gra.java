@@ -22,6 +22,7 @@ public class Gra {
     int [] pozycje;
     Fizyka fizyka;
     List<Gracz> ubici=new ArrayList<Gracz>();
+    Random rand=new Random();
     
     /**
      * Inicjując należy podać unikalny numer jaki gra będzie mieć w systemie
@@ -51,15 +52,17 @@ public class Gra {
      * @return ile graczy obecnie liczy gra lub -1 gdy dodanie nie powiodło się
      */
     public int add(Gracz g){
-            Random r=new Random();
+            if(g==null || g.getName()==null || pozycje==null)
+                return -1;
+            
             g.setGid(id);
             if(gracze==null || gracze.length==0)
-                g.setPos(pozycje[r.nextInt(pozycje.length)]);
+                g.setPos(pozycje[rand.nextInt(pozycje.length)]);
             else{
                 for(int i=0;i<pozycje.length;++i){
                     boolean nadasie=true;
                     for(int j=0;j<gracze.length;++j)
-                        if(gracze[j].getPos()==pozycje[i]){
+                        if(gracze[j]!=null && Math.abs(gracze[j].getPos()-pozycje[i])<80){
                             nadasie=false;
                             break;
                         }
@@ -84,13 +87,17 @@ public class Gra {
             return gracze.length;
     }
     
+    /**
+     * Usuwa gracza z gry jeśli był w niej obecny.
+     * @param id identyfikator gracza, którego należy usunąć
+     */
     public void remove(long id){
         if(gracze==null)
             return;
         
         boolean aOnTamWOgoleJest=false;
         for(int i=0;i<gracze.length;++i){
-            if(gracze[i].getId()==id){
+            if(gracze[i]!=null && gracze[i].getId()==id){
                 aOnTamWOgoleJest=true;
                 break;
             }
@@ -101,34 +108,52 @@ public class Gra {
             gracze=null;
             return;
         }
-        Gracz [] ngracze=new Gracz[gracze.length-1];
-        int j=0;
+        Gracz [] ngracze=null;
         for(int i=0;i<gracze.length;++i){
-            if(id!=gracze[i].getId()){
-                ngracze[j]=gracze[i];
-                j++;
+            if(gracze[i]!=null && gracze[i].getName()!=null && gracze[i].getId()!=id){
+                if(ngracze==null)
+                    ngracze=new Gracz[1];
+                else{
+                    Gracz [] mgracze=new Gracz[ngracze.length+1];
+                    for(int k=0;k<ngracze.length;++k)
+                        mgracze[k]=ngracze[k];
+                    ngracze=mgracze;
+                }
+                ngracze[ngracze.length-1]=gracze[i];
             }
         }
         gracze=ngracze;
     }
 
-    
+    /**
+     * Zwraca maksymalną liczbę graczy, którzy mogą jednocześnie brać udział w grze.
+     * @return 
+     */
     public int getMax() {
         return max;
     }
 
     /**
-     * Ustala maksymalną liczbę graczy, którzy mogą brać udział w grze
+     * Ustala maksymalną liczbę graczy, którzy mogą jednocześnie brać udział w grze.
      * @param max 
      */
     public void setMax(int max) {
         this.max = max;
     }
 
+    /**
+     * Zwraca tablicę węzłów terenu areny - wysokości y punktów oddalonych od siebie
+     * o x_res.
+     * @return tablica węzłów terenu
+     */
     public int[] getTeren() {
         return teren;
     }
 
+    /**
+     * Ustawia tablicę węzłów terenu
+     * @param teren 
+     */
     public void setTeren(int[] teren) {
         this.teren = teren;
         if(fizyka==null)
@@ -136,10 +161,18 @@ public class Gra {
         fizyka.teren=teren;
     }
 
+    /**
+     * Zwraca odległość x pomiędzy węzłami terenu
+     * @return 
+     */
     public int getX_res() {
         return x_res;
     }
 
+    /**
+     * Ustawia odległość x pomiędzy węzłami terenu
+     * @param x_res 
+     */
     public void setX_res(int x_res) {
         this.x_res = x_res;
         if(fizyka==null)
@@ -147,19 +180,38 @@ public class Gra {
         fizyka.x_res=x_res;
     }
     
+    /**
+     * Zwraca aktualnie grających graczy
+     * @return 
+     */
     public Gracz [] getGracze(){
         return gracze;
     }
 
+    /**
+     * Zwraca pozycje x na których można ustawiać graczy.
+     * Ilość pozycji = maks. ilość graczy grających na raz
+     * @return 
+     */
     public int[] getPozycje() {
         return pozycje;
     }
 
+    /**
+     * Ustawia pozycje x na których można ustawiać graczy na planszy.
+     * Ilość pozycji zostanie ustawiona jako maksymalna liczba jednocześnie
+     * grających graczy na arenie.
+     * @param pozycje 
+     */
     public void setPozycje(int[] pozycje) {
         this.pozycje = pozycje;
         max=pozycje.length;
     }
     
+    /**
+     * Sprawdza czy do gry może dołączyć gracz
+     * @return prawda jeśli do gry może dołączyć gracz, fałsz gdy nie
+     */
     public boolean canIJoin(){
         if(gracze==null || gracze.length<max)
             return true;
@@ -167,6 +219,11 @@ public class Gra {
             return false;
     }
     
+    /**
+     * Zwraca gracza o danym identyfikatorze lub null, gdy nie ma gracza w grze.
+     * @param id identyfikator gracza
+     * @return 
+     */
     public Gracz getGracz(long id){
         if(gracze==null)
             return null;
@@ -199,6 +256,8 @@ public class Gra {
     
     /**
      * Oblicza obrażenia wywołane przez strzał i uaktualnia dane graczy.
+     * W przypadku wykrycia czołgów zniszczonych dodawane są one do listy.
+     * Zawartość listy można odczytać metodą getUbitychPozycje.
      * @param x pozycja x eksplozji pocisku
      * @param y pozycja y eksplozji pocisku
      * @return prawda gdy wykryto obrażenia (czyli gdy należy przekazać klientom nowe dane)
@@ -208,6 +267,8 @@ public class Gra {
             return false;
         boolean trafilo=false;
         for(int i=0;i<gracze.length;++i){
+            if(gracze[i]==null)
+                continue;
             int gx=gracze[i].getPos();
             int gy=igrek(gx);
             double r=Math.sqrt((x-gx)*(x-gx)+(y-gy)*(y-gy));
@@ -218,7 +279,7 @@ public class Gra {
                 if(gracze[i].getLife()<1){
                     gracze[i].setLife(0);
                     if(ubici==null)
-                        ubici=new ArrayList();
+                        ubici=new ArrayList<Gracz>();
                     ubici.add(gracze[i]);
                 }
             }
@@ -232,7 +293,7 @@ public class Gra {
     
     /**
      * Na podstawie listy z poprzednio wykonanego strzału zwraca pozycje 
-     * graczy których życie dobiło zera.
+     * graczy których życie dobiło zera. Lista ta jest następnie czyszczona.
      * @return lista pozycji graczy
      */
     public int [] getUbitychPozycje(){
@@ -242,7 +303,7 @@ public class Gra {
         for(int i=0;i<ubici.size();++i){
             up[i]=ubici.get(i).getPos();
         }
-        ubici=new ArrayList<Gracz>();
+        ubici.clear();
         return up;
     }
     
@@ -271,5 +332,19 @@ public class Gra {
             }
         }
         return dx;
+    }
+
+    /**
+     * Sprawdza czy gracz o danym id gra w grze.
+     * @param id
+     * @return prawda gdy gracz jest w grze, fałsz gdy go nie ma.
+     */
+    public boolean czyGra(long id) {
+        if(gracze==null)
+            return false;
+        for(int i=0;i<gracze.length;++i)
+            if(gracze[i].getId()==id)
+                return true;
+        return false;
     }
 }

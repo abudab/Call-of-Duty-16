@@ -26,9 +26,11 @@ var graid; //id areny na serwerze
 var ruchupdate=0; //przesunięcie czołgu które należy wykonać
 var ruchid; //id czołgu który jest przesuwany
 var reload=0; //okres bezczynności po strzale/ruchu w ms.
-var wciazproboj=true;
+var polaczano=false;
+var laczenieInterwal=10;
 
-var WEBSOCKET="ws://127.0.0.1:8080/Call16";
+//
+var WEBSOCKET="ws://192.168.242.155:8080/Call16";
 
 /*Funkcja wywołuje się przy ładowaniu dokumentu i ustawia
  *odpowiednie wartości zmiennych globalnych oraz inicjuje web sockety.
@@ -42,15 +44,20 @@ function letsRoll(){
 		terrain_y.push(parseInt(t[i]));
 	}
         myId=parseInt(document.getElementById('myid').innerHTML);
-	player_pos=parseInt(document.getElementById('player_pos').innerHTML);
-	player_life=parseInt(document.getElementById('player_life').innerHTML);
+	//player_pos=parseInt(document.getElementById('player_pos').innerHTML);//
+	//player_life=parseInt(document.getElementById('player_life').innerHTML);
 	msciwoj_mk1=document.getElementById('msciwoj_mk1');
 	var eL=document.getElementById('enemies_list').children;
 	enemies=new Array();
 	var i;
 	for(i=0;i<eL.length;++i) {
 		var enemyData=eL[i].innerHTML.split(" ");
-		enemies.push({imie: enemyData[0],
+                if(parseInt(enemyData[3])==myId){
+                    player_pos=parseInt(enemyData[1]);
+                    player_life=parseInt(enemyData[2]);
+                }
+                else
+                    enemies.push({imie: enemyData[0],
 				pos: parseInt(enemyData[1]),
 				life: parseInt(enemyData[2]),
                                 id: parseInt(enemyData[3])});
@@ -66,19 +73,17 @@ function letsRoll(){
 	document.onmousedown=wcisniecieMHandler;
 	document.onmouseup=puszczenieMHandler;
         //ws = new WebSocket("ws://192.168.242.155:8080/Call16/WSServlet");
-        ws = new WebSocket(WEBSOCKET);
-        ws.onopen = przywitajSie;
-        ws.onclose = function(evt) {alert("Connection closed ..."); 
-                                        setTimeout('wsConnect()',1000);};
-        ws.onmessage = recv;
+        wsConnect();
 }
 
 /*
  *Ponawia połączenie - wywoływane w interwałach 1s po nieoczekiwanym przerwaniu transmisji
  **/
 function wsConnect(){
-    if(wciazproboj)
-        ws=new WebSocket(WEBSOCKET);
+    ws = new WebSocket(WEBSOCKET);
+    ws.onopen = przywitajSie;
+    ws.onclose = function(evt) {polaczano=false };
+    ws.onmessage = recv;
 }
 
 /*Rysuje ehm... teren
@@ -316,6 +321,24 @@ function naprawdeRuszKogos(){
     ruchupdate=Math.round(ruchupdate-deix);
 }
 
+function rysujStanPolaczenia(k){
+    if(polaczano){
+        k.fillStyle="rgb(50,100,50)";
+        k.fillText("Connected :)",5,35);
+        return;
+    }
+    else{
+        k.fillStyle="rgb(255,0,0)";
+        k.fillText("Disconnected :((( !!!",5,35);
+        if(laczenieInterwal>0){
+            laczenieInterwal-=1;
+            return
+        }
+        wsConnect();
+        laczenieInterwal=10;
+    }
+}
+
 /*rysuje kolejne warstwy animacji i uaktualnia zmienne na następną klatkę*/
 function animuj(){
 	var k=pl.getContext('2d');
@@ -327,6 +350,7 @@ function animuj(){
 	rysujWrogow(k);
 	rysujLifeBar(k);
         rysujTrajektorie(k);
+        rysujStanPolaczenia(k);
         graczeUpdate();
 	ruszGracza();
         naprawdeRuszKogos();
@@ -377,7 +401,7 @@ function strzal(){
     var wysylka=player_pos+" "+alfa+" "+pbv;
     //alert("wysylam: "+wysylka);
     ws.send(wysylka);
-    reload=pbv<40?40:pbv;
+    reload=pbv<30?30:pbv>80?80:pbv;
     //ws.close();
 }
 
@@ -505,16 +529,13 @@ function recv(e){
  * Wykonuje się po uzyskaniu połączenia przez web socket
  */
 function przywitajSie(evt){
-    alert("Connection open...");
-    ws.send("Uklony "+graid);
+    //alert("Connection open...");
+    polaczano=true;
+    ws.send("Uklony "+graid+" "+myId);
 }
 
-function wsReconnect(){
-    ws.close();
-    ws=new WebSocket(WEBSOCKET);
-}
 
 function uciekaj(){
-    wciazproboj=false;
-    ws.close();
+    if(polaczano)
+        ws.send("Imout");
 }

@@ -16,26 +16,21 @@
 <myid id="myid">
     #{sesja.myid}
 </myid>
+    <c:set var="gId" value="${sesja.graid}"/>
 <graid id="graid">
-    #{sesja.graid}
+    #{gId}
 </graid>     
 <img id="msciwoj_mk1" src="msc1.png" />
 <img id="msciwoj_mirrored" src="msc2.png"/>
 <img id="t35" src="T35.png" />
 <terrain id="terrain_xres">
-    #{sesja.xres}
+    #{powitalna.xres(gId)}
 </terrain>
 <terrain id="terrain_y">
-    #{sesja.terrain}
+    #{powitalna.getTeren(gId)}
 </terrain>
-<player id="player_pos">
-    #{sesja.pos}
-</player>
-<player id="player_life">
-    #{sesja.life}
-</player>
 <enemies id="enemies_list">
-    <c:forEach var="i" items="${sesja.enemies}">
+    <c:forEach var="i" items="${powitalna.enemies(gId)}">
 <enemy>
 #{i}
 </enemy>
@@ -44,7 +39,7 @@
 </canvas>
 
         <h:form>
-            <h:commandButton onclick="uciekaj()" action="#{sesja.seppuku()}" value="Eject, eject!!!"/>
+            <input type="button" onclick="uciekaj()" value="Opuść grę" />
             <h:commandButton onclick="uciekaj()" action="index" value="Wstecz" />
         </h:form>
     </h:body>
