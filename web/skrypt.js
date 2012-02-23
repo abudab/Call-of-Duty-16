@@ -30,7 +30,8 @@ var polaczano=false;
 var laczenieInterwal=10;
 
 //
-var WEBSOCKET="ws://192.168.242.155:8080/Call16";
+var WEBSOCKET="ws://localhost:8080/Call16";
+//asadmin set configs.config.server-config.network-config.protocols.protocol.http-listener-1.http.websockets-support-enabled=true
 
 /*Funkcja wywołuje się przy ładowaniu dokumentu i ustawia
  *odpowiednie wartości zmiennych globalnych oraz inicjuje web sockety.
